@@ -10,6 +10,8 @@ class ParseJob:
         self.parser = ParseTeam()
         self.file_path = 'players.json'
         self.update_interval = timedelta(hours=24)
+
+        
     def parserLoad(self):
         if os.path.exists(self.file_path):
             last_modified = datetime.fromtimestamp(os.path.getmtime(self.file_path))

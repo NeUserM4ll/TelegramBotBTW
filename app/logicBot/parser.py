@@ -27,16 +27,16 @@ class ParseTeam:
                 player = {
                     'number': cols[0].get_text(strip=True),
                     'name': name,
-                    'position': cols[2].get_text(strip=True),
-                    'matches': cols[3].get_text(strip=True),        
-                    'full_games': cols[4].get_text(strip=True),       
-                    'was_replaced': cols[5].get_text(strip=True),      
-                    'came_replace': cols[6].get_text(strip=True),     
-                    'was_and_came_replace': cols[7].get_text(strip=True), 
-                    'goals': cols[8].get_text(strip=True),           
-                    'assists': cols[9].get_text(strip=True),          
-                    'yellow_cards': cols[10].get_text(strip=True),   
-                    'red_cards': cols[11].get_text(strip=True),      
+                    'position': cols[2].get_text(strip=True)  ,
+                    'matches': cols[3].get_text(strip=True) if cols[3].getText(strip=True) != "" else "0" ,        
+                    'full_games': cols[4].get_text(strip=True) if cols[4].getText(strip=True) != "" else "0" ,    
+                    'was_replaced': cols[5].get_text(strip=True) if cols[5].getText(strip=True) != "" else "0" ,    
+                    'came_replace': cols[6].get_text(strip=True) if cols[6].getText(strip=True) != "" else "0" ,    
+                    'was_and_came_replace': cols[7].get_text(strip=True) if cols[7].getText(strip=True) != "" else "0" ,    
+                    'goals': cols[8].get_text(strip=True) if cols[8].getText(strip=True) != "" else "0" ,    
+                    'assists': cols[9].get_text(strip=True) if cols[9].getText(strip=True) != "" else "0" ,    
+                    'yellow_cards': cols[10].get_text(strip=True) if cols[10].getText(strip=True) != "" else "0" ,    
+                    'red_cards': cols[11].get_text(strip=True) if cols[11].getText(strip=True) != "" else "0" ,    
                     'image': cols[1].find('img')['src'] if cols[1].find('img') else None
                 }
                 self.players.append(player)
@@ -189,6 +189,9 @@ class ParseMatch:
                 json.dump(matches, f, ensure_ascii=False, indent=4)
 
             print(f"Сохранили {len(matches)} матчей в {self.output_file}")
+
+
+
 
 
 if __name__ == "__main__":
