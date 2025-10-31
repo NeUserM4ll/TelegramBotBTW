@@ -5,6 +5,12 @@ import json
 
 from commads_bot.botMessage import *
 
+JSON_FILE_MATCH = 'matches.json' 
+JSON_FILE_PLAYERS = 'players.json'
+JSON_FILE_STATIC_GAMES = 'staticGame.json'
+
+
+
 def mainFunction():
     if len(sys.argv) < 1:
         print("no have token")
@@ -13,7 +19,10 @@ def mainFunction():
 
     bot = telebot.TeleBot(token=TOKEN)
 
-    
+    dataMatch = None
+    dataPlayers = None
+    dataStaticGame = None
+    dataUser = None
 
     # выгрузка json-файла
 
@@ -26,7 +35,7 @@ def mainFunction():
     def getTeamInlineKeyBoard():
         statTeamKeyBoard = InlineKeyboardMarkup()
         statTeamKeyBoard.row_width = 1
-        with open('player.json','r', encoding='utf-8') as file:
+        with open(JSON_FILE_PLAYERS,'r', encoding='utf-8') as file:
             data = [item["name"] for item in json.load(file)]
         for i in range(len(data)):
             statTeamKeyBoard.add(InlineKeyboardButton(data[i],callback_data=f"statTeam_{i}"))
@@ -38,14 +47,14 @@ def mainFunction():
 
         statTeamKeyBoard = InlineKeyboardMarkup()
         statTeamKeyBoard.row_width = 1
-        with open('matches.json','r', encoding='utf-8') as file:
+        with open(JSON_FILE_MATCH,'r', encoding='utf-8') as file:
             data = [item["date"] for item in json.load(file)]
         for i in range(len(data)):
             statTeamKeyBoard.add(InlineKeyboardButton(data[i],callback_data=f"matchTeam_{i}"))
         
         return statTeamKeyBoard
 
-
+    #работа бота
     @bot.callback_query_handler(func=lambda call: call.data.startswith("matchTeam_"))
     def callback_query(call):
         numMatch = call.data.split("_",1)[1]
@@ -65,20 +74,20 @@ def mainFunction():
 
         try:
 
-            data = loadjsonPa('player.json')[int(num)]
+            data = loadjsonPa(JSON_FILE_PLAYERS)[int(num)]
             
             bot.send_photo(call.message.chat.id,data["image"],caption=statTeamstr(data=data),reply_markup=None)
         except Exception as e:
               bot.send_message(call.message.chat.id,"подождите немного....")
 
  
-    #работа бота
+    
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("statGame_"))
     def callback_query(call):
         key = call.data.split("_",1)[1]
 
-        data = loadjsonPa('players.json')
+        data = loadjsonPa(JSON_FILE_STATIC_GAMES)
         try:
             bot.send_photo(call.message.chat.id,"https://bigfoto.name/photo/uploads/posts/2023-02/1676631269_bigfoto-name-p-futbolnaya-ploshchadka-na-dache-83.jpg",
                            
@@ -106,8 +115,8 @@ def mainFunction():
     #статистика игр, проведенных командой
     @bot.message_handler(commands=["statGame"])
     def statGame(message):
-        data = loadjsonPa('players.json')
-
+        data = loadjsonPa(JSON_FILE_STATIC_GAMES)
+        
         try:
             bot.send_message(message.chat.id,statGamestr(data=data),reply_markup=None)
             
