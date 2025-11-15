@@ -2,6 +2,8 @@ import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import sys
 import json
+import threading
+import time
 from datetime import datetime, timedelta
 import os
 from logicBot.loadParse import FootballParserManager
@@ -16,31 +18,47 @@ dataMatch = None
 dataPlayers = None
 dataStaticGame   = None
 dataUser = None
-INTERVAL = timedelta(hours=24)
+INTERVAL = timedelta(seconds=15)
 
 
 def adutoUpdateData():
     global dataStaticGame
     global dataMatch
     global dataPlayers
-    if dataStaticGame is None or datetime.now() - dataStaticGame["time_key"] > INTERVAL :
-        if not os.path.exists(JSON_FILE_STATIC_GAMES) or not os.path.exists(JSON_FILE_PLAYERS) or not os.path.exists(JSON_FILE_MATCH) or datetime.now() - datetime.fromtimestamp(os.path.getmtime(JSON_FILE_STATIC_GAMES))> INTERVAL :
+    while True:
+        
+        print("Работа\n\n\n")
+        if dataStaticGame is None or datetime.now() - dataStaticGame["time_key"] > INTERVAL :
+            if not os.path.exists(JSON_FILE_STATIC_GAMES) or not os.path.exists(JSON_FILE_PLAYERS) or not os.path.exists(JSON_FILE_MATCH) or datetime.now() - datetime.fromtimestamp(os.path.getmtime(JSON_FILE_STATIC_GAMES))> INTERVAL :
+                print("Работа2\n\n\n")
+                print("Обновляем JSON через парсер")
+                FootballParserManager().starts()
 
-            print("Обновляем JSON через парсер")
-            FootballParserManager().edit_json()
+                    
                 
             
-        
 
-            
+                
+            # if not os.path.exists(JSON_FILE_STATIC_GAMES):
+            #     return
+            with open(JSON_FILE_STATIC_GAMES, 'r', encoding='utf-8') as f:
+                print("Работа3\n\n\n")
+                dataStaticGame = json.load(f)
+                dataStaticGame["time_key"] = datetime.now()
+            with open(JSON_FILE_PLAYERS, 'r', encoding='utf-8') as f:
+                    print("Работа4\n\n\n")
+                    dataPlayers = json.load(f)
+            with open(JSON_FILE_MATCH, 'r', encoding='utf-8') as f:
+                    print("Работа5\n\n\n")
+                    dataMatch = json.load(f)
+        time.sleep(10)
 
-        with open(JSON_FILE_STATIC_GAMES, 'r', encoding='utf-8') as f:
-            
-            dataStaticGame = json.load(f)
-        with open(JSON_FILE_PLAYERS, 'r', encoding='utf-8') as f:
-                dataPlayers = json.load(f)
-        with open(JSON_FILE_MATCH, 'r', encoding='utf-8') as f:
-                dataMatch = json.load(f)
+def start_automatic_task():
+    thread = threading.Thread(target=adutoUpdateData)
+    thread.daemon = True  # Позволяет прервать поток при завершении основного процесса
+    thread.start()
+
+
 def mainFunction():
     global dataStaticGame
     global dataMatch
@@ -115,7 +133,7 @@ def mainFunction():
         
             
         if dataMatch is None:
-            dataMatch = loadjsonPa('matches.json')[int(numMatch)]
+            dataMatch = loadjsonPa('matches.json')
         bot.send_message(call.message.chat.id,teamMatchstr(dataMatch[int(numMatch)]))
 
         
@@ -196,8 +214,6 @@ def mainFunction():
 
 
 if __name__ == '__main__':
-    adutoUpdateData()
-    print(dataStaticGame)
-    #print(h)
+    start_automatic_task()
     mainFunction()
 

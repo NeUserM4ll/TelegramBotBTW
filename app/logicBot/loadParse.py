@@ -52,6 +52,7 @@ class FootballParserManager:
             return
 
     def starts(self):
+        print("работа№523\n")
         ParseTeam().parser()
         ParseGame().parser()
         ParseMatch("ПАРИ НН","https://fcnn.ru/season/championship/calendar?_isBase=true&_limit=12&_page=1&_season=25-26-rpl&_type=championship&_view=month").run()
