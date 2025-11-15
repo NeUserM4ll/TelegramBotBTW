@@ -3,10 +3,11 @@ import os
 from datetime import datetime, timedelta
 import json
 
-from logicBot.parser import ParseTeam, ParseMatch
+from logicBot.parser import ParseTeam, ParseMatch,ParseGame
 
 class ParseJob:
     def __init__(self):
+        
         self.parser = ParseTeam()
         self.file_path = 'players.json'
         self.update_interval = timedelta(hours=24)
@@ -37,19 +38,24 @@ class FootballParserManager:
         self.output_file = output_file
 
     def edit_json(self):
-        with open(self.output_file, "r", encoding="utf-8") as f:
-            matches = json.load(f)
-        for i in range(len(matches)):
-            if "score" in matches[i] and "vs" in matches[i]["score"]:
-                matches[i]["score"] = "матчу еще только предстоит быть"
-                matches[i]["score_home"] = 0
-                matches[i]["score_away"] = 0
-        with open(self.output_file, "w", encoding="utf-8") as f:
-            json.dump(matches, f, ensure_ascii=False, indent=4)
+        try:
+            with open(self.output_file, "r", encoding="utf-8") as f:
+                matches = json.load(f)
+            for i in range(len(matches)):
+                if "score" in matches[i] and "vs" in matches[i]["score"]:
+                    matches[i]["score"] = "матчу еще только предстоит быть"
+                    matches[i]["score_home"] = 0
+                    matches[i]["score_away"] = 0
+            with open(self.output_file, "w", encoding="utf-8") as f:
+                json.dump(matches, f, ensure_ascii=False, indent=4)
+        except FileNotFoundError:
+            return
 
     def starts(self):
-
+        ParseTeam().parser()
+        ParseGame().parser()
         ParseMatch("ПАРИ НН","https://fcnn.ru/season/championship/calendar?_isBase=true&_limit=12&_page=1&_season=25-26-rpl&_type=championship&_view=month").run()
         self.edit_json()
         print("успех")
+
     

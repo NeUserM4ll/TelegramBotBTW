@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import json
 import os
 import time
+import datetime
 
 
 url = "https://fcnn.ru/season/championship/stat"
@@ -14,8 +15,8 @@ soup = BeautifulSoup(response.text, 'html.parser')
 
 
 class ParseTeam:
-    def __init__(self):
-       
+    def __init__(self,output_file = 'players.json'):
+        self.output_file = output_file
         self.players = []
    
     def parser(self):
@@ -37,20 +38,22 @@ class ParseTeam:
                     'assists': cols[9].get_text(strip=True) if cols[9].getText(strip=True) != "" else "0" ,    
                     'yellow_cards': cols[10].get_text(strip=True) if cols[10].getText(strip=True) != "" else "0" ,    
                     'red_cards': cols[11].get_text(strip=True) if cols[11].getText(strip=True) != "" else "0" ,    
-                    'image': cols[1].find('img')['src'] if cols[1].find('img') else None
+                    'image': cols[1].find('img')['src'] if cols[1].find('img') else None,
+                    'time': str(datetime.datetime.now().strftime("%d %B %Y") )
                 }
                 self.players.append(player)
 
        
-        with open('player.json', 'w', encoding='utf-8') as f:
+        with open(self.output_file, 'w', encoding='utf-8') as f:
             json.dump(self.players, f, ensure_ascii=False, indent=4)
 
         print(f"Сохранили {len(self.players)} игроков в player.json")
 
 class ParseGame:
-    def __init__(self):
+    def __init__(self,output_file = 'staticGame.json'):
         self.game = []
         self.statTeam = {}
+        self.output_file = output_file
 
     def parser(self):
        for row in soup.select('.TableTeamStat-module__bDPElrad tr'):
@@ -67,13 +70,13 @@ class ParseGame:
                 'дома': home,
                 'в гостях': away
             }
-            with open('players.json', 'w', encoding='utf-8') as f:
+            with open(self.output_file, 'w', encoding='utf-8') as f:
                 json.dump(self.statTeam, f, ensure_ascii=False, indent=4)
 
 
 
         pass
-
+#OK
 class ParseMatch:
         def __init__(self, team_name, url, output_file="matches.json"):
             self.team_name = team_name
@@ -198,4 +201,5 @@ if __name__ == "__main__":
 
     parrt = ParseTeam()
     parrt.parser()
+    
 

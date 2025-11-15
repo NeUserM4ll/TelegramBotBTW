@@ -2,7 +2,9 @@ import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import sys
 import json
-
+from datetime import datetime, timedelta
+import os
+from logicBot.loadParse import FootballParserManager
 from commads_bot.botMessage import *
 
 JSON_FILE_MATCH = 'matches.json' 
@@ -10,8 +12,39 @@ JSON_FILE_PLAYERS = 'players.json'
 JSON_FILE_STATIC_GAMES = 'staticGame.json'
 
 
+dataMatch = None
+dataPlayers = None
+dataStaticGame   = None
+dataUser = None
+INTERVAL = timedelta(hours=24)
 
+
+def adutoUpdateData():
+    global dataStaticGame
+    global dataMatch
+    global dataPlayers
+    if dataStaticGame is None or datetime.now() - dataStaticGame["time_key"] > INTERVAL :
+        if not os.path.exists(JSON_FILE_STATIC_GAMES) or not os.path.exists(JSON_FILE_PLAYERS) or not os.path.exists(JSON_FILE_MATCH) or datetime.now() - datetime.fromtimestamp(os.path.getmtime(JSON_FILE_STATIC_GAMES))> INTERVAL :
+
+            print("Обновляем JSON через парсер")
+            FootballParserManager().edit_json()
+                
+            
+        
+
+            
+
+        with open(JSON_FILE_STATIC_GAMES, 'r', encoding='utf-8') as f:
+            
+            dataStaticGame = json.load(f)
+        with open(JSON_FILE_PLAYERS, 'r', encoding='utf-8') as f:
+                dataPlayers = json.load(f)
+        with open(JSON_FILE_MATCH, 'r', encoding='utf-8') as f:
+                dataMatch = json.load(f)
 def mainFunction():
+    global dataStaticGame
+    global dataMatch
+    global dataPlayers
     if len(sys.argv) < 1:
         print("no have token")
         exit()
@@ -19,16 +52,32 @@ def mainFunction():
 
     bot = telebot.TeleBot(token=TOKEN)
 
-    dataMatch = None
-    dataPlayers = None
-    dataStaticGame = None
-    dataUser = None
 
     # выгрузка json-файла
 
+
+
+
+
     def loadjsonPa(file):
-        with open(file,'r', encoding='utf-8') as Jfile:
-            return json.load(Jfile)
+        
+        if os.path.exists(file):
+            
+            last_modified = datetime.fromtimestamp(os.path.getmtime(file))
+            now = datetime.now()
+            update_interval = timedelta(hours=24)
+            if now - last_modified < update_interval:
+                with open(file,'r', encoding='utf-8') as Jfile:
+                    data = json.load(Jfile)
+                    if isinstance(data,list):
+                        data.append(datetime.now())
+                        return data
+                    data["time_key"] = datetime.now()
+                    return data
+            try:    
+                FootballParserManager().starts()
+            except Exception as e:
+                print (f"ne poluchilos {e} ")
 
 
 
@@ -57,28 +106,33 @@ def mainFunction():
     #работа бота
     @bot.callback_query_handler(func=lambda call: call.data.startswith("matchTeam_"))
     def callback_query(call):
+        global dataMatch
         numMatch = call.data.split("_",1)[1]
-        
         try:
-            data = loadjsonPa('matches.json')[int(numMatch)]
-            bot.send_message(call.message.chat.id,teamMatchstr(data))
+            print(dataMatch[1] )
+        except :
+            print ("tre")
+        
+            
+        if dataMatch is None:
+            dataMatch = loadjsonPa('matches.json')[int(numMatch)]
+        bot.send_message(call.message.chat.id,teamMatchstr(dataMatch[int(numMatch)]))
 
-        except Exception as e:
-            bot.send_message(call.message.chat.id,f"подождите немного.... {e}")
+        
             
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("statTeam_"))
     def callback_query(call):
-
+        global dataPlayers
         num = call.data.split("_",1)[1]
 
         try:
-
-            data = loadjsonPa(JSON_FILE_PLAYERS)[int(num)]
+            if dataPlayers is None :
+                dataPlayers = loadjsonPa(JSON_FILE_PLAYERS)
             
-            bot.send_photo(call.message.chat.id,data["image"],caption=statTeamstr(data=data),reply_markup=None)
+            bot.send_photo(call.message.chat.id,dataPlayers[int(num)]["image"],caption=statTeamstr(data=dataPlayers[int(num)]),reply_markup=None)
         except Exception as e:
-              bot.send_message(call.message.chat.id,"подождите немного....")
+              bot.send_message(call.message.chat.id,f"подождите немного.... {e}")
 
  
     
@@ -86,12 +140,13 @@ def mainFunction():
     @bot.callback_query_handler(func=lambda call: call.data.startswith("statGame_"))
     def callback_query(call):
         key = call.data.split("_",1)[1]
+        if dataStaticGame is None or dataStaticGame["time_key"] > datetime.now():
 
-        data = loadjsonPa(JSON_FILE_STATIC_GAMES)
+            dataStaticGame = loadjsonPa(JSON_FILE_STATIC_GAMES)
         try:
             bot.send_photo(call.message.chat.id,"https://bigfoto.name/photo/uploads/posts/2023-02/1676631269_bigfoto-name-p-futbolnaya-ploshchadka-na-dache-83.jpg",
                            
-                           caption=statGamestr(data=data,key=key),reply_markup=None
+                           caption=statGamestr(data=dataStaticGame,key=key),reply_markup=None
                            )
             
             
@@ -115,10 +170,12 @@ def mainFunction():
     #статистика игр, проведенных командой
     @bot.message_handler(commands=["statGame"])
     def statGame(message):
-        data = loadjsonPa(JSON_FILE_STATIC_GAMES)
+        global dataStaticGame
+        if dataStaticGame is None :
+            dataStaticGame = loadjsonPa(JSON_FILE_STATIC_GAMES)
         
         try:
-            bot.send_message(message.chat.id,statGamestr(data=data),reply_markup=None)
+            bot.send_message(message.chat.id,statGamestr(data=dataStaticGame),reply_markup=None)
             
         except Exception as e:
             bot.send_message(message.chat.id,f" ОШИБКА{e}")
@@ -130,6 +187,8 @@ def mainFunction():
         matchKeyboard = getTeamMatchesnlineKeyBoard()
         
         bot.send_message(message.chat.id,"n",reply_markup=matchKeyboard)
+    
+
 
     bot.polling(none_stop=True)
 
@@ -137,6 +196,8 @@ def mainFunction():
 
 
 if __name__ == '__main__':
-
+    adutoUpdateData()
+    print(dataStaticGame)
+    #print(h)
     mainFunction()
 
