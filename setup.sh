@@ -16,9 +16,10 @@ if [[ ! -d ".venv" ]]; then
 fi
 
 if [[ -z "$VIRTUAL_ENV" ]]; then
-source ./.venv/bin/activate
+    source ./.venv/bin/activate
+    echo "Виртуальное окружение активно: $VIRTUAL_ENV"
 fi
-echo "Виртуальное окружение активно: $VIRTUAL_ENV"
+
 
 if [[ -f "requirements.txt" ]]; then
     echo "Устанавливаю библиотеки из requirements.txt..."

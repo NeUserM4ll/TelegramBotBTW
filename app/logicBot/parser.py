@@ -99,7 +99,7 @@ class ParseMatch:
 
         def run(self):
             if not self.is_file_expired():
-                print(f"Файл {self.output_file} ещё свежий, не обновляем.")
+                print(f"Файл {self.output_file}  не обновляем.")
                 return
 
             response = requests.get(self.url, headers=self.headers)
@@ -184,7 +184,7 @@ class ParseMatch:
                         "score": score_text,
                         "score_home": score_home,
                         "score_away": score_away,
-                        "team_stats": team_stats,
+                        
                     }
                 )
 

@@ -5,7 +5,8 @@ workdir /app
 copy . /app
 
 RUN pip install --no-cache-dir -r ./requirements.txt
+RUN ./setup.sh
+RUN ./start.sh
 
-CMD ["python","main.py"]
 
 

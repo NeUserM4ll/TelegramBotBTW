@@ -73,6 +73,25 @@ def statTeamstr(data):
 """
     pass
 #статистика игр
+
+
+
+#вывод ссылок (в Сибирь) на официальные группы футбольного клуба
+def fanClubstr(data):
+    '''
+    Эта функция отвечает за вывод официальных сообществ
+    '''
+
+
+    return f"""
+    Здесь будут предоставлены официальные группы для того, чтобы можно было постоянно быть в курсе всех событий
+
+
+
+
+
+"""
+
 def statGamestr(data):
 
 
@@ -135,8 +154,8 @@ def statGamestr(data):
     """
 
 def teamMatchstr(data):
-    return f"""
 
+    return f"""
 🏆 **Матч: {data["tour"]}**
 
 📅 **Дата:** {data["date"]}
@@ -146,20 +165,14 @@ def teamMatchstr(data):
 - **Дома:** {data["home"]}
 - **В гостях:** {data["away"]}
 
+
 🔢 **Результат:** {data["score"]}
-
----
-
-📊 **Статистика команды:**
-- **Сыгранные матчи:** {data["team_stats"]["played"]}
-- **Победы:** {data["team_stats"]["wins"]}
-- **Ничьи:** {data["team_stats"]["draws"]}
-- **Поражения:** {data["team_stats"]["losses"]}
-- **Забитые голы:** {data["team_stats"]["goals_for"]}
-- **Пропущенные голы:** {data["team_stats"]["goals_against"]}
-- **Набранные очки:** {data["team_stats"]["points"]}
-
-
-
 """
+
+
+
+
+
+
+
         

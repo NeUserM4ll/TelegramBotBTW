@@ -1,5 +1,5 @@
 import telebot
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton,InputMediaPhoto
 import sys
 import json
 import threading
@@ -51,7 +51,7 @@ def adutoUpdateData():
             with open(JSON_FILE_MATCH, 'r', encoding='utf-8') as f:
                     print("Работа5\n\n\n")
                     dataMatch = json.load(f)
-        time.sleep(10)
+        time.sleep(60*60*24)
 
 def start_automatic_task():
     thread = threading.Thread(target=adutoUpdateData)
@@ -97,7 +97,17 @@ def mainFunction():
             except Exception as e:
                 print (f"ne poluchilos {e} ")
 
+    def getSwitchPlayers(num):
+        global dataPlayers
+        prevNextPlayer = InlineKeyboardMarkup(row_width=3)
+        prevPlayer = InlineKeyboardButton(text=f"   <------\n \n{dataPlayers[num-1]["name"]} ",callback_data=f"statTeame_{num-1}") if num-1 >=0 else None
+        nextPlayer = InlineKeyboardButton(text=f"   \n \n{dataPlayers[num+1]["name"]}------>    ",callback_data=f"statTeame_{num+1}") if num+1 < len(dataPlayers) else None
 
+        prevNextPlayer.row(prevPlayer,nextPlayer) if prevPlayer is not None and nextPlayer  is not None else " "
+        prevNextPlayer.add(nextPlayer) if nextPlayer  is not None and prevPlayer is None else " "
+        prevNextPlayer.add(prevPlayer) if prevPlayer  is not None and nextPlayer is None else " "
+
+        return prevNextPlayer
 
     def getTeamInlineKeyBoard():
         statTeamKeyBoard = InlineKeyboardMarkup()
@@ -134,23 +144,40 @@ def mainFunction():
             
         if dataMatch is None:
             dataMatch = loadjsonPa('matches.json')
+
         bot.send_message(call.message.chat.id,teamMatchstr(dataMatch[int(numMatch)]))
 
         
-            
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("statTeame_"))       
+    def callback_query_handler(call):
+        global dataPlayers
+        num = int(call.data.split("_",1)[1])
+        keyboard = getSwitchPlayers(num)
+       
+        med = InputMediaPhoto(dataPlayers[num]["image"],caption=statTeamstr(data=dataPlayers[num]))
+        bot.edit_message_media(media=med,chat_id=call.message.chat.id,message_id=call.message.message_id)
+        
+        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=keyboard)
+        
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("statTeam_"))
     def callback_query(call):
         global dataPlayers
-        num = call.data.split("_",1)[1]
-
+        num = int(call.data.split("_",1)[1])
+        
         try:
             if dataPlayers is None :
                 dataPlayers = loadjsonPa(JSON_FILE_PLAYERS)
+
+            prevNextPlayer = getSwitchPlayers(num)
             
-            bot.send_photo(call.message.chat.id,dataPlayers[int(num)]["image"],caption=statTeamstr(data=dataPlayers[int(num)]),reply_markup=None)
+            
+            bot.send_photo(call.message.chat.id,dataPlayers[num]["image"],caption=statTeamstr(data=dataPlayers[num]),reply_markup=prevNextPlayer)
+            
+            
         except Exception as e:
-              bot.send_message(call.message.chat.id,f"подождите немного.... {e}")
+              bot.send_message(call.message.chat.id,f"подождите немного.... ")
+              print(e)
 
  
     
@@ -199,6 +226,9 @@ def mainFunction():
             bot.send_message(message.chat.id,f" ОШИБКА{e}")
         bot.send_message(message.chat.id,"это статистика игр")
 
+    @bot.message_handler(commands=["fan_club"])
+    def fanClubMessage():
+        pass
 
     @bot.message_handler(commands=["matchs"])
     def matchGame(message):
