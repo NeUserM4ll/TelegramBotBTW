@@ -151,12 +151,15 @@ def mainFunction():
     @bot.callback_query_handler(func=lambda call: call.data.startswith("statTeame_"))       
     def callback_query_handler(call):
         global dataPlayers
-        num = int(call.data.split("_",1)[1])
+        num = int(call.data.split("_", 1)[1])
         keyboard = getSwitchPlayers(num)
-       
-        med = InputMediaPhoto(dataPlayers[num]["image"],caption=statTeamstr(data=dataPlayers[num]))
-        bot.edit_message_media(media=med,chat_id=call.message.chat.id,message_id=call.message.message_id)
         
+        try:
+            med = InputMediaPhoto(dataPlayers[num]["image"], caption=statTeamstr(data=dataPlayers[num]))
+            bot.edit_message_media(media=med, chat_id=call.message.chat.id, message_id=call.message.message_id)
+        except Exception as e:
+            bot.send_message(call.message.chat.id,statTeamstr(data=dataPlayers[num]),reply_markup=keyboard)
+
         bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=keyboard)
         
 
@@ -176,7 +179,7 @@ def mainFunction():
             
             
         except Exception as e:
-              bot.send_message(call.message.chat.id,f"подождите немного.... ")
+              bot.send_message(call.message.chat.id,statTeamstr(data=dataPlayers[num]),reply_markup=prevNextPlayer)
               print(e)
 
  
